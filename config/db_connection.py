@@ -27,7 +27,6 @@ Base = declarative_base()
 
 def get_db():
     logger.info("Intentando conectar a la base de datos")
-    logger.info(f"URL BASE DE DATOS: {DATABASE_URL}")
     db = SessionLocal()
     try:
         logger.info("Conexión a la base de datos exitosa")
