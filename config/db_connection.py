@@ -33,6 +33,3 @@ def get_db():
         yield db
     except Exception as e:
         logger.error(f"Error en la conexión: {e}")
-    finally:
-        logger.info("Cerrando conexión a la base de datos")
-        db.close()
