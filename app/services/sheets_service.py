@@ -266,7 +266,7 @@ class SheetsService:
             # Columna E
             self.sheet.update_cell(
                 row_number,
-                5,
+                10,
                 "SI"
             )
 

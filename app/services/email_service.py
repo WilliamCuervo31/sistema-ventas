@@ -1,13 +1,22 @@
-from email.mime.multipart import MIMEMultipart
+import logging
+
+import sib_api_v3_sdk
+
+from sib_api_v3_sdk.rest import (
+    ApiException
+)
 
 from config import settings
-import smtplib
-from email.mime.text import MIMEText
-import logging
 
 logger = logging.getLogger(__name__)
 
-def load_email_template(nombre):
+
+def load_email_template(
+    nombre: str
+):
+    """
+    Carga template HTML
+    """
 
     with open(
         "app/templates/birthday_email.html",
@@ -17,61 +26,96 @@ def load_email_template(nombre):
 
         html = file.read()
 
-    html = html.replace("{{nombre}}", nombre)
+    html = html.replace(
+        "{{nombre}}",
+        nombre
+    )
+
+    html = html.replace(
+        "{{base_url}}",
+        settings.APP_BASE_URL
+    )
 
     return html
 
-def send_birthday_email(receiver_email, nombre):
+
+def send_birthday_email(
+    receiver_email: str,
+    nombre: str
+):
+    """
+    Envía correo cumpleaños
+    """
 
     try:
 
-        html_content = load_email_template(nombre)
-
-        html_content = html_content.replace(
-            "{{base_url}}",
-            settings.APP_BASE_URL
+        configuration = (
+            sib_api_v3_sdk.Configuration()
         )
 
-        msg = MIMEMultipart("alternative")
+        configuration.api_key[
+            "api-key"
+        ] = settings.BREVO_API_KEY
 
-        msg["Subject"] = f"Feliz Cumpleaños {nombre} - MADAS"
-        msg["From"] = settings.EMAIL_USER
-        msg["To"] = receiver_email
-
-        html_part = MIMEText(
-            html_content,
-            "html"
+        api_instance = (
+            sib_api_v3_sdk
+            .TransactionalEmailsApi(
+                sib_api_v3_sdk
+                .ApiClient(configuration)
+            )
         )
 
-        msg.attach(html_part)
-
-
-        with smtplib.SMTP(
-            settings.SMTP_SERVER,
-            int(settings.SMTP_PORT)
-        ) as server:
-
-            server.starttls()
-
-            server.login(
-                settings.EMAIL_USER,
-                settings.EMAIL_PASSWORD
+        html_content = (
+            load_email_template(
+                nombre
             )
+        )
 
-            server.sendmail(
-                settings.EMAIL_USER,
-                receiver_email,
-                msg.as_string()
+        send_smtp_email = (
+            sib_api_v3_sdk
+            .SendSmtpEmail(
+
+                to=[
+                    {
+                        "email":
+                        receiver_email
+                    }
+                ],
+
+                sender={
+                    "name": "MADAS",
+
+                    "email": (
+                        settings.EMAIL_USER
+                    )
+                },
+
+                subject=(
+                    f"🎂 Feliz cumpleaños {nombre}"
+                ),
+
+                html_content=(
+                    html_content
+                )
             )
+        )
+
+        api_instance.send_transac_email(
+            send_smtp_email
+        )
 
         logger.info(
-            f"Correo enviado correctamente a "
-            f"{receiver_email}"
+            f"Correo enviado correctamente "
+            f"a {receiver_email}"
         )
 
-    except Exception as e:
+        return True
+
+    except ApiException as e:
 
         logger.error(
-            f"Error enviando correo a "
-            f"{receiver_email}: {str(e)}"
+            f"Error enviando correo "
+            f"a {receiver_email}: {str(e)}"
         )
+
+        return False
