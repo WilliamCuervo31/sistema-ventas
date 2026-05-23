@@ -18,11 +18,12 @@ def process_birthdays():
             and cliente["nombre"]
         ):
 
-            send_birthday_email(
+            email_enviado = (send_birthday_email(
                 cliente["correo"],
                 cliente["nombre"]
-            )
+            ))
 
-            sheets_service.mark_email_sent(
-                cliente["row_number"]
-            )
+            if email_enviado:
+                sheets_service.mark_email_sent(
+                    cliente["row_number"]
+                )
