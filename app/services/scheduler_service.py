@@ -34,7 +34,7 @@ def execute_birthdays():
         is_running = False
 
 def run_scheduler():
-    schedule.every().day.at("12:00").do(execute_birthdays)
+    schedule.every().day.at("13:00").do(execute_birthdays)
     logger.info("Scheduler iniciado")
 
     while True:
